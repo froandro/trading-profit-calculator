@@ -95,12 +95,13 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
   z-index: 10;
   transition: background 0.15s, border-color 0.15s;
+  color: var(--text2);
 }
-.theme-toggle:hover { border-color: var(--blue); }
+.theme-toggle:hover { border-color: var(--blue); color: var(--text); }
 .theme-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.theme-toggle svg { fill: currentColor; inline-size: 1.25rem; block-size: 1.25rem; }
 .subtitle {
   font-size: 0.875rem;
   color: var(--text2);
@@ -344,7 +345,10 @@ h1 {
 <body>
 <div class="app">
 
-<button class="theme-toggle" id="theme-toggle" aria-label="Переключить тему">🌙</button>
+<button class="theme-toggle" id="theme-toggle" aria-label="Переключить тему">
+  <svg viewBox="0 0 24 24" id="theme-icon-moon"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-5.4-5.4c0-1.73.82-3.26 2.07-4.28A9 9 0 0 0 12 3z"/></svg>
+  <svg viewBox="0 0 24 24" id="theme-icon-sun" style="display:none"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+</button>
 <h1>Калькулятор сделки</h1>
 <p class="subtitle">Купил → цена выросла → продал. Сколько заработал с учётом НКД и комиссии? И почём откупать?</p>
 
@@ -805,21 +809,28 @@ function calc() {
 
 function initTheme() {
   const html = document.documentElement;
-  const btn = document.getElementById('theme-toggle');
+  const moon = document.getElementById('theme-icon-moon');
+  const sun = document.getElementById('theme-icon-sun');
   const saved = localStorage.getItem('theme');
-  if (saved === 'light') { html.className = 'light-mode'; btn.textContent = '🌙'; }
-  else if (saved === 'dark') { html.className = 'dark-mode'; btn.textContent = '☀️'; }
-  else if (matchMedia('(prefers-color-scheme: dark)').matches) { html.className = 'dark-mode'; btn.textContent = '☀️'; }
-  btn.addEventListener('click', () => {
-    if (html.classList.contains('dark-mode')) {
-      html.className = 'light-mode';
-      btn.textContent = '🌙';
-      localStorage.setItem('theme', 'light');
-    } else {
+  function setTheme(mode) {
+    if (mode === 'dark') {
       html.className = 'dark-mode';
-      btn.textContent = '☀️';
-      localStorage.setItem('theme', 'dark');
+      moon.style.display = 'none';
+      sun.style.display = '';
+    } else {
+      html.className = 'light-mode';
+      moon.style.display = '';
+      sun.style.display = 'none';
     }
+  }
+  if (saved === 'light') setTheme('light');
+  else if (saved === 'dark') setTheme('dark');
+  else if (matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+  else setTheme('light');
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const next = html.classList.contains('dark-mode') ? 'light' : 'dark';
+    setTheme(next);
+    localStorage.setItem('theme', next);
   });
 }
 document.addEventListener('DOMContentLoaded', () => {
