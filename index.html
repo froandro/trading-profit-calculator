@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор сделок — цена, НКД, комиссия</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --border: #d9d9d0;
+  --text: #1a1a1a;
+  --text2: #6b6b60;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --blue: #2563eb;
+  --blue-bg: #eff6ff;
+  --orange: #d97706;
+  --orange-bg: #fffbeb;
+  --radius: 8px;
+  --font: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Consolas', monospace;
+}
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 30px 16px;
+  display: flex;
+  justify-content: center;
+}
+.app { width: 100%; max-width: 780px; }
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 28px;
+}
+.row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.col { flex: 1; min-width: 220px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text2);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.field {
+  margin-bottom: 14px;
+}
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 5px;
+}
+.field .wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.field input {
+  width: 100%;
+  padding: 10px 48px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 17px;
+  font-weight: 600;
+  font-family: var(--mono);
+  background: #fafaf7;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.field .unit {
+  position: absolute;
+  right: 12px;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+}
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #fafaf7;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 600;
+}
+.step-header .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.step-body {
+  padding: 16px 20px;
+}
+.line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  gap: 8px;
+}
+.line .lbl { color: var(--text2); flex-shrink: 0; }
+.line .vals {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.line .val {
+  font-family: var(--mono);
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+}
+.line .val-total {
+  font-family: var(--mono);
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+  font-size: 16px;
+  min-width: 100px;
+}
+.line .val-unit {
+  font-size: 13px;
+  color: var(--text2);
+  font-weight: 400;
+  font-family: var(--font);
+}
+.line.total {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 10px;
+  font-size: 15px;
+}
+.line.total .lbl { color: var(--text); font-weight: 600; }
+.line.total .val { font-size: 18px; }
+.line.total .val-total { font-size: 20px; }
+.line.total.green { border-top-color: var(--green); }
+.line.total.green .val { color: var(--green); }
+.line.total.green .val-total { color: var(--green); }
+.line.total.red { border-top-color: var(--red); }
+.line.total.red .val { color: var(--red); }
+.line.total.red .val-total { color: var(--red); }
+.line .hint {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 400;
+  font-family: var(--font);
+}
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+.tag.green { background: var(--green-bg); color: var(--green); }
+.tag.red { background: var(--red-bg); color: var(--red); }
+.be-hero {
+  background: var(--surface);
+  border: 2px solid #f59e0b;
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  text-align: center;
+  position: relative;
+}
+.be-hero::before {
+  content: '⚖';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  padding: 0 10px;
+  font-size: 22px;
+}
+.be-hero .label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+.be-hero .big {
+  font-size: 36px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: #d97706;
+  line-height: 1.3;
+}
+.be-hero .sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.be-hero .sub strong { color: var(--text); }
+.notice {
+  font-size: 13px;
+  color: var(--text2);
+  background: var(--orange-bg);
+  border: 1px solid #fde68a;
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-top: 16px;
+  line-height: 1.6;
+}
+.notice strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<h1>Калькулятор сделки</h1>
+<p class="subtitle">Купил → цена выросла → продал. Сколько заработал с учётом НКД и комиссии? И почём откупать?</p>
+
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <div class="card-title">Что купили</div>
+      <div class="field">
+        <label for="investment">Сумма инвестиций</label>
+        <div class="wrap">
+          <input type="number" id="investment" value="200000" min="100" step="1000" inputmode="decimal" aria-label="Сумма инвестиций">
+          <span class="unit">₽</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="buy-price">Чистая цена покупки</label>
+        <div class="wrap">
+          <input type="number" id="buy-price" value="1000" min="0" step="0.01" inputmode="decimal" aria-label="Чистая цена покупки">
+          <span class="unit">₽</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="nkd">НКД на дату покупки</label>
+        <div class="wrap">
+          <input type="number" id="nkd" value="0" min="0" step="0.01" inputmode="decimal" aria-label="НКД на дату покупки">
+          <span class="unit">₽</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="commission">Комиссия брокера</label>
+        <div class="wrap">
+          <input type="number" id="commission" value="0.05" min="0" step="0.01" inputmode="decimal" aria-label="Комиссия брокера">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="tax-rate">Ставка налога на прибыль</label>
+        <div class="wrap">
+          <input type="number" id="tax-rate" value="13" min="0" max="50" step="0.1" inputmode="decimal" aria-label="Ставка налога">
+          <span class="unit">%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <div class="card-title">Сценарий</div>
+      <div class="field">
+        <label for="rise">Цена выросла на</label>
+        <div class="wrap">
+          <input type="number" id="rise" value="1.0" step="0.1" inputmode="decimal" aria-label="Рост цены">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="nkd-sell">НКД на дату продажи</label>
+        <div class="wrap">
+          <input type="number" id="nkd-sell" value="0" min="0" step="0.01" inputmode="decimal" aria-label="НКД на дату продажи">
+          <span class="unit">₽</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="decline">Затем снижение для откупа</label>
+        <div class="wrap">
+          <input type="number" id="decline" value="2.0" min="0" step="0.1" inputmode="decimal" aria-label="Снижение для откупа">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="nkd-buyback">НКД на дату откупа</label>
+        <div class="wrap">
+          <input type="number" id="nkd-buyback" value="0" min="0" step="0.01" inputmode="decimal" aria-label="НКД на дату откупа">
+          <span class="unit">₽</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- BREAKEVEN HERO -->
+<div class="be-hero">
+  <div class="label">При какой цене продажа будет в ноль?</div>
+  <div class="big" id="be-main-value">—</div>
+  <div class="sub">чистая цена (без НКД)</div>
+  <div class="sub" style="margin-top:8px;">Для этого цена должна <span id="be-direction">вырасти</span> на <strong id="be-needed-rise">—</strong></div>
+</div>
+
+<!-- STEP 0: Quantity -->
+<div class="step">
+  <div class="step-header">
+    <span class="num">0</span>
+    Количество
+  </div>
+  <div class="step-body">
+    <div class="line">
+      <span class="lbl">Доступно для покупки</span>
+      <span class="vals">
+        <span class="val-unit">на сумму</span>
+        <span class="val-total" id="s0-investment">—</span>
+      </span>
+    </div>
+    <div class="line total">
+      <span class="lbl">Количество бумаг</span>
+      <span class="vals">
+        <span class="val-unit">шт</span>
+        <span class="val-total" id="s0-qty">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">Остаток средств</span>
+      <span class="vals">
+        <span class="val-unit">не потрачено</span>
+        <span class="val-total" id="s0-remainder">—</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1: Покупка -->
+<div class="step">
+  <div class="step-header">
+    <span class="num">1</span>
+    Покупка: сколько потратили
+  </div>
+  <div class="step-body">
+    <div class="line">
+      <span class="lbl">Чистая цена</span>
+      <span class="vals">
+        <span class="val" id="s1-clean">—</span>
+        <span class="val-total" id="s1-clean-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">+ НКД</span>
+      <span class="vals">
+        <span class="val" id="s1-nkd">—</span>
+        <span class="val-total" id="s1-nkd-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">= Грязная цена</span>
+      <span class="vals">
+        <span class="val" id="s1-dirty">—</span>
+        <span class="val-total" id="s1-dirty-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">− Комиссия при покупке</span>
+      <span class="vals">
+        <span class="val" id="s1-comm">—</span>
+        <span class="val-total" id="s1-comm-total">—</span>
+      </span>
+    </div>
+    <div class="line total">
+      <span class="lbl">ИТОГО потратили</span>
+      <span class="vals">
+        <span class="val-unit">всего</span>
+        <span class="val-total" id="s1-total">—</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: Продажа -->
+<div class="step">
+  <div class="step-header">
+    <span class="num">2</span>
+    Продажа: сколько получили
+  </div>
+  <div class="step-body">
+    <div class="line">
+      <span class="lbl">Новая чистая цена <span class="hint" id="s2-rise-hint">(+1.0%)</span></span>
+      <span class="vals">
+        <span class="val" id="s2-clean">—</span>
+        <span class="val-total" id="s2-clean-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">+ НКД на дату продажи</span>
+      <span class="vals">
+        <span class="val" id="s2-nkd">—</span>
+        <span class="val-total" id="s2-nkd-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">= Грязная цена сделки</span>
+      <span class="vals">
+        <span class="val" id="s2-dirty">—</span>
+        <span class="val-total" id="s2-dirty-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">− Комиссия при продаже</span>
+      <span class="vals">
+        <span class="val" id="s2-comm">—</span>
+        <span class="val-total" id="s2-comm-total">—</span>
+      </span>
+    </div>
+    <div class="line total">
+      <span class="lbl">ИТОГО получили</span>
+      <span class="vals">
+        <span class="val-unit">всего</span>
+        <span class="val-total" id="s2-total">—</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: Результат -->
+<div class="step">
+  <div class="step-header">
+    <span class="num">3</span>
+    Результат сделки
+  </div>
+  <div class="step-body">
+    <div class="line">
+      <span class="lbl">Получили при продаже</span>
+      <span class="val-total" id="s3-got">—</span>
+    </div>
+    <div class="line">
+      <span class="lbl">− Потратили при покупке</span>
+      <span class="val-total" id="s3-spent">—</span>
+    </div>
+    <div class="line total green" id="s3-profit-line">
+      <span class="lbl">= ПРИБЫЛЬ ДО НАЛОГА <span class="tag green" id="s3-profit-tag">+0.00%</span></span>
+      <span class="val-total" id="s3-profit">—</span>
+    </div>
+    <div class="line" id="s3-tax-line" style="display:none;">
+      <span class="lbl">− Налог <span class="hint" id="s3-tax-label">13%</span></span>
+      <span class="val-total" id="s3-tax" style="color:var(--red);">—</span>
+    </div>
+    <div class="line total green" id="s3-net-line">
+      <span class="lbl">= ПРИБЫЛЬ ПОСЛЕ НАЛОГА</span>
+      <span class="val-total" id="s3-net-profit">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: Откуп -->
+<div class="step">
+  <div class="step-header">
+    <span class="num">4</span>
+    Откуп после снижения
+  </div>
+  <div class="step-body">
+    <div class="line">
+      <span class="lbl">Цена откупа <span class="hint">(чистая, −<span id="s4-decline-label">2</span>% от цены продажи)</span></span>
+      <span class="vals">
+        <span class="val" id="s4-buyback-clean">—</span>
+        <span class="val-total" id="s4-buyback-clean-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">+ НКД на дату откупа</span>
+      <span class="vals">
+        <span class="val" id="s4-nkd">—</span>
+        <span class="val-total" id="s4-nkd-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">+ Комиссия при откупе</span>
+      <span class="vals">
+        <span class="val" id="s4-comm">—</span>
+        <span class="val-total" id="s4-comm-total">—</span>
+      </span>
+    </div>
+    <div class="line total">
+      <span class="lbl">ИТОГО за откуп</span>
+      <span class="vals">
+        <span class="val-unit">всего</span>
+        <span class="val-total" id="s4-total">—</span>
+      </span>
+    </div>
+    <div class="line">
+      <span class="lbl">Получили при продаже</span>
+      <span class="val-total" id="s4-sell-proceeds">—</span>
+    </div>
+    <div class="line total" id="s4-free-line">
+      <span class="lbl">Остаток свободных средств</span>
+      <span class="val-total" id="s4-free">—</span>
+    </div>
+  </div>
+</div>
+
+<div class="notice">
+  <strong>Как это работает.</strong> Вы платите <strong>чистую цену + НКД на дату покупки + комиссию</strong>. При продаже получаете <strong>новую чистую цену + НКД на дату продажи − комиссию</strong>. Разница — ваша прибыль или убыток. При откупе — свой НКД на дату откупа.
+</div>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const els = {};
+
+function p(v) {
+  if (typeof v === 'string') v = v.replace(',', '.');
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+
+function setup() {
+  const ids = ['investment','buy-price','nkd','nkd-sell','nkd-buyback','commission','tax-rate','rise','decline',
+    's0-investment','s0-qty','s0-remainder',
+    's1-clean','s1-nkd','s1-dirty','s1-comm','s1-total',
+    's1-clean-total','s1-nkd-total','s1-dirty-total','s1-comm-total',
+    's2-clean','s2-nkd','s2-dirty','s2-comm','s2-total','s2-rise-hint',
+    's2-clean-total','s2-nkd-total','s2-dirty-total','s2-comm-total',
+    's3-got','s3-spent','s3-profit','s3-profit-tag','s3-profit-line','s3-tax-label','s3-tax','s3-tax-line','s3-net-profit','s3-net-line',
+    's4-buyback-clean','s4-nkd','s4-comm','s4-total','s4-sell-proceeds','s4-free','s4-free-line','s4-decline-label',
+    's4-buyback-clean-total','s4-nkd-total','s4-comm-total',
+    'be-main-value','be-needed-rise','be-direction'];
+  ids.forEach(id => els[id] = $(id));
+}
+
+function fmt(v) {
+  if (typeof v !== 'number' || isNaN(v)) return '—';
+  return v.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
+}
+function fmtInt(v) {
+  if (typeof v !== 'number' || isNaN(v)) return '—';
+  return v.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function calc() {
+  const buyPrice = Math.max(0, p(els['buy-price'].value));
+  const nkdBuy = Math.max(0, p(els['nkd'].value));
+  const nkdSell = Math.max(0, p(els['nkd-sell'].value));
+  const nkdBuyback = Math.max(0, p(els['nkd-buyback'].value));
+  let comm = Math.max(0, Math.min(0.99, p(els['commission'].value) / 100));
+  const rise = p(els['rise'].value) / 100;
+  const decline = Math.max(0, Math.min(1, p(els['decline'].value) / 100));
+  const investment = Math.max(0, p(els['investment'].value));
+
+  // STEP 0: Quantity
+  const dirtyPrice = buyPrice + nkdBuy;
+  const unitCost = dirtyPrice * (1 + comm);
+  const qty = unitCost > 0 ? Math.floor(investment / unitCost) : 0;
+  const totalSpent = qty * unitCost;
+  const remainder = investment - totalSpent;
+
+  els['s0-investment'].textContent = fmt(investment);
+  els['s0-qty'].textContent = fmtInt(qty) + ' шт × ' + fmt(unitCost) + ' = ' + fmt(totalSpent);
+  els['s0-remainder'].textContent = fmt(remainder);
+
+  // STEP 1: Purchase
+  const commBuy = dirtyPrice * comm;
+
+  els['s1-clean'].textContent = fmt(buyPrice);
+  els['s1-clean-total'].textContent = fmt(buyPrice * qty);
+  els['s1-nkd'].textContent = '+' + fmt(nkdBuy);
+  els['s1-nkd-total'].textContent = '+' + fmt(nkdBuy * qty);
+  els['s1-dirty'].textContent = fmt(dirtyPrice);
+  els['s1-dirty-total'].textContent = fmt(dirtyPrice * qty);
+  els['s1-comm'].textContent = '−' + fmt(commBuy);
+  els['s1-comm-total'].textContent = '−' + fmt(commBuy * qty);
+  els['s1-total'].textContent = fmt(totalSpent);
+
+  // STEP 2: Sale
+  const sellClean = buyPrice * (1 + rise);
+  const sellDirty = sellClean + nkdSell;
+  const commSell = sellDirty * comm;
+  const sellProceeds = sellDirty - commSell;
+
+  const risePct = (rise * 100);
+  els['s2-rise-hint'].textContent = (risePct >= 0 ? '+' : '') + risePct.toFixed(1) + '%';
+  els['s2-clean'].textContent = fmt(sellClean);
+  els['s2-clean-total'].textContent = fmt(sellClean * qty);
+  els['s2-nkd'].textContent = '+' + fmt(nkdSell);
+  els['s2-nkd-total'].textContent = '+' + fmt(nkdSell * qty);
+  els['s2-dirty'].textContent = fmt(sellDirty);
+  els['s2-dirty-total'].textContent = fmt(sellDirty * qty);
+  els['s2-comm'].textContent = '−' + fmt(commSell);
+  els['s2-comm-total'].textContent = '−' + fmt(commSell * qty);
+  els['s2-total'].textContent = fmt(sellProceeds * qty);
+
+  // STEP 3: Result
+  const taxRate = Math.max(0, Math.min(0.5, p(els['tax-rate'].value) / 100));
+  const profit = (sellProceeds - unitCost) * qty;
+  const profitPct = unitCost > 0 ? (sellProceeds / unitCost - 1) * 100 : 0;
+  const tax = profit > 0 ? profit * taxRate : 0;
+  const netProfit = profit - tax;
+  const netPct = unitCost > 0 ? ((sellProceeds - unitCost) / unitCost * (1 - taxRate)) * 100 : 0;
+
+  els['s3-got'].textContent = fmt(sellProceeds * qty);
+  els['s3-spent'].textContent = fmt(totalSpent);
+  els['s3-profit'].textContent = (profit >= 0 ? '+' : '') + fmt(profit);
+
+  const profitLine = els['s3-profit-line'];
+  const tag = els['s3-profit-tag'];
+  if (profit > 0) {
+    profitLine.className = 'line total green';
+    tag.className = 'tag green';
+  } else if (profit < 0) {
+    profitLine.className = 'line total red';
+    tag.className = 'tag red';
+  } else {
+    profitLine.className = 'line total';
+    tag.className = 'tag';
+  }
+  tag.textContent = (profitPct >= 0 ? '+' : '') + profitPct.toFixed(2) + '%';
+
+  if (tax > 0) {
+    els['s3-tax-line'].style.display = '';
+    els['s3-tax-label'].textContent = (taxRate * 100).toFixed(1) + '%';
+    els['s3-tax'].textContent = '−' + fmt(tax);
+    els['s3-net-profit'].textContent = '+' + fmt(netProfit);
+    const netLine = els['s3-net-line'];
+    netLine.className = 'line total' + (netProfit >= 0 ? ' green' : ' red');
+  } else {
+    els['s3-tax-line'].style.display = 'none';
+    els['s3-net-profit'].textContent = els['s3-profit'].textContent;
+    const netLine = els['s3-net-line'];
+    netLine.className = 'line total' + (profit >= 0 ? ' green' : ' red');
+  }
+
+  // BREAKEVEN: (sellClean + nkdSell) * (1 - comm) = (buyPrice + nkdBuy) * (1 + comm)
+  const beDirty = dirtyPrice * (1 + comm) / (1 - comm);
+  const beClean = beDirty - nkdSell;
+  const neededRise = buyPrice > 0 ? ((beClean / buyPrice) - 1) * 100 : 0;
+
+  els['be-main-value'].textContent = fmt(beClean);
+  els['be-needed-rise'].textContent = Math.abs(neededRise).toFixed(3) + ' %';
+  els['be-direction'].textContent = neededRise >= 0 ? 'вырасти' : 'упасть';
+
+  // STEP 4: Buyback
+  const bbClean = sellClean * (1 - decline);
+  const bbDirty = bbClean + nkdBuyback;
+  const commBb = bbDirty * comm;
+  const bbCost = bbDirty + commBb;
+  const profitTotal = sellProceeds * qty;
+  const bbTotal = bbCost * qty;
+  const freeCash = profitTotal - bbTotal;
+
+  els['s4-decline-label'].textContent = (decline * 100).toFixed(1);
+  els['s4-buyback-clean'].textContent = fmt(bbClean);
+  els['s4-buyback-clean-total'].textContent = fmt(bbClean * qty);
+  els['s4-nkd'].textContent = '+' + fmt(nkdBuyback);
+  els['s4-nkd-total'].textContent = '+' + fmt(nkdBuyback * qty);
+  els['s4-comm'].textContent = '−' + fmt(commBb);
+  els['s4-comm-total'].textContent = '−' + fmt(commBb * qty);
+  els['s4-total'].textContent = fmt(bbTotal);
+  els['s4-sell-proceeds'].textContent = fmt(profitTotal);
+
+  const freeEl = els['s4-free'];
+  const freeLine = els['s4-free-line'];
+  if (freeCash > 0) {
+    freeEl.textContent = '+' + fmt(freeCash);
+    freeLine.className = 'line total green';
+  } else if (freeCash < 0) {
+    freeEl.textContent = fmt(freeCash);
+    freeLine.className = 'line total red';
+  } else {
+    freeEl.textContent = fmt(freeCash);
+    freeLine.className = 'line total';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setup();
+  document.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', calc);
+    el.addEventListener('change', calc);
+  });
+  calc();
+});
+</script>
+</body>
+</html>
