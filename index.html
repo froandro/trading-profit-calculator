@@ -349,14 +349,28 @@ h1 {
 .btn-pdf:hover { border-color: var(--blue); color: var(--text); }
 .btn-pdf:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .btn-pdf svg { fill: currentColor; inline-size: 1rem; block-size: 1rem; }
+#report { display: none; }
 @media print {
-  .theme-toggle, .btn-row, .notice { display: none !important; }
-  .step { break-inside: avoid; page-break-after: avoid; }
-  .be-hero { break-inside: avoid; }
-  body { padding: 0.5in; background: #fff; }
+  .step, .be-hero, .row, .theme-toggle, .btn-row, .notice { display: none !important; }
+  #report { display: block !important; }
+  body { padding: 0.4in; background: #fff; color: #000; font-size: 12pt; }
   .app { max-width: 100%; }
   :root { --bg: #fff; --surface: #fff; --border: #ccc; --text: #000; --text2: #666; }
-  .field input { border: 1px solid #ccc; background: #f9f9f9; }
+  .step-header, .field input { border-color: #ccc !important; }
+  .rp-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; }
+  .rp-header h2 { font-size: 18pt; font-weight: 700; margin: 0; }
+  .rp-date { font-size: 10pt; color: #666; }
+  #report h3 { font-size: 13pt; margin: 1.2rem 0 0.5rem; font-weight: 600; border-bottom: 1px solid #ccc; padding-bottom: 0.2rem; }
+  .rp-params { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 10pt; }
+  .rp-params caption { font-weight: 600; text-align: left; padding: 0.5rem 0; font-size: 11pt; }
+  .rp-params td { padding: 0.2rem 0.5rem; border-bottom: 1px solid #eee; }
+  .rp-params td:last-child { text-align: right; font-family: 'Courier New', monospace; }
+  .rp-results { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 10pt; }
+  .rp-results th { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 2px solid #333; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+  .rp-results td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #eee; }
+  .rp-results .r { text-align: right; font-family: 'Courier New', monospace; }
+  .rp-results .rp-profit td { font-weight: 600; border-top: 1px solid #333; }
+  .rp-val { font-family: 'Courier New', monospace; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0.01ms !important; }
@@ -665,6 +679,58 @@ h1 {
   <strong>Как это работает.</strong> Вы платите <strong>чистую цену + НКД на дату покупки + комиссию</strong>. При продаже получаете <strong>новую чистую цену + НКД на дату продажи − комиссию</strong>. Разница — ваша прибыль или убыток. При откупе — свой НКД на дату откупа.
 </div>
 
+<!-- REPORT (visible only in print) -->
+<div id="report">
+  <div class="rp-header">
+    <h2>Отчёт о сделке</h2>
+    <span class="rp-date" id="rp-date"></span>
+  </div>
+
+  <table class="rp-params">
+    <caption>Параметры</caption>
+    <tr><td>Сумма инвестиций</td><td class="rp-val" id="rp-investment"></td></tr>
+    <tr><td>Цена покупки (чистая)</td><td class="rp-val" id="rp-buy-price"></td></tr>
+    <tr><td>НКД на дату покупки</td><td class="rp-val" id="rp-nkd"></td></tr>
+    <tr><td>НКД на дату продажи</td><td class="rp-val" id="rp-nkd-sell"></td></tr>
+    <tr><td>НКД на дату откупа</td><td class="rp-val" id="rp-nkd-buyback"></td></tr>
+    <tr><td>Комиссия брокера</td><td class="rp-val" id="rp-commission"></td></tr>
+    <tr><td>Ставка налога</td><td class="rp-val" id="rp-tax-rate"></td></tr>
+    <tr><td>Рост цены</td><td class="rp-val" id="rp-rise"></td></tr>
+    <tr><td>Снижение для откупа</td><td class="rp-val" id="rp-decline"></td></tr>
+  </table>
+
+  <h3>Результаты</h3>
+  <table class="rp-results">
+    <thead><tr><th>Показатель</th><th class="r">За 1 шт</th><th class="r">Всего</th></tr></thead>
+    <tbody>
+      <tr><td>Количество</td><td class="r"></td><td class="r" id="rp-qty"></td></tr>
+      <tr><td>Грязная цена покупки</td><td class="r" id="rp-buy-dirty"></td><td class="r" id="rp-buy-dirty-total"></td></tr>
+      <tr><td>Расходы на покупку</td><td class="r" id="rp-buy-cost"></td><td class="r" id="rp-buy-cost-total"></td></tr>
+      <tr><td>Грязная цена продажи</td><td class="r" id="rp-sell-dirty"></td><td class="r" id="rp-sell-dirty-total"></td></tr>
+      <tr><td>Выручка от продажи</td><td class="r" id="rp-sell-proceeds"></td><td class="r" id="rp-sell-proceeds-total"></td></tr>
+      <tr class="rp-profit"><td>Прибыль до налога</td><td class="r" id="rp-profit"></td><td class="r" id="rp-profit-total"></td></tr>
+      <tr><td>Налог</td><td class="r"></td><td class="r" id="rp-tax"></td></tr>
+      <tr class="rp-profit"><td>Прибыль после налога</td><td class="r" id="rp-net-profit"></td><td class="r" id="rp-net-profit-total"></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Безубыточность</h3>
+  <table class="rp-results">
+    <tr><td>Цена безубыточности (чистая)</td><td class="r" id="rp-be-clean"></td></tr>
+    <tr><td>Необходимое изменение цены</td><td class="r" id="rp-be-change"></td></tr>
+  </table>
+
+  <h3>Откуп после снижения</h3>
+  <table class="rp-results">
+    <thead><tr><th>Показатель</th><th class="r">За 1 шт</th><th class="r">Всего</th></tr></thead>
+    <tbody>
+      <tr><td>Цена откупа (чистая)</td><td class="r" id="rp-bb-clean"></td><td class="r" id="rp-bb-clean-total"></td></tr>
+      <tr><td>Расходы на откуп</td><td class="r" id="rp-bb-cost"></td><td class="r" id="rp-bb-cost-total"></td></tr>
+      <tr class="rp-profit"><td>Свободных средств</td><td class="r"></td><td class="r" id="rp-bb-free"></td></tr>
+    </tbody>
+  </table>
+</div>
+
 </div>
 
 <script>
@@ -867,7 +933,49 @@ document.addEventListener('DOMContentLoaded', () => {
     el.addEventListener('input', calc);
     el.addEventListener('change', calc);
   });
-  document.getElementById('btn-pdf').addEventListener('click', () => window.print());
+  function r(id) { return document.getElementById(id); }
+  function populateReport() {
+    const p = id => (els[id] || {}).textContent || '—';
+    const raw = id => {
+      const v = document.getElementById(id);
+      return v ? v.value : '0';
+    };
+    r('rp-date').textContent = new Date().toLocaleDateString('ru-RU');
+    r('rp-investment').textContent = document.getElementById('investment').value + ' ₽';
+    r('rp-buy-price').textContent = document.getElementById('buy-price').value + ' ₽';
+    r('rp-nkd').textContent = document.getElementById('nkd').value + ' ₽';
+    r('rp-nkd-sell').textContent = document.getElementById('nkd-sell').value + ' ₽';
+    r('rp-nkd-buyback').textContent = document.getElementById('nkd-buyback').value + ' ₽';
+    r('rp-commission').textContent = document.getElementById('commission').value + '%';
+    r('rp-tax-rate').textContent = document.getElementById('tax-rate').value + '%';
+    r('rp-rise').textContent = document.getElementById('rise').value + '%';
+    r('rp-decline').textContent = document.getElementById('decline').value + '%';
+    r('rp-qty').textContent = p('s0-qty');
+    r('rp-buy-dirty').textContent = p('s1-dirty');
+    r('rp-buy-dirty-total').textContent = p('s1-dirty-total');
+    r('rp-buy-cost').textContent = p('s1-total') + ' ₽';
+    r('rp-buy-cost-total').textContent = p('s1-total');
+    r('rp-sell-dirty').textContent = p('s2-dirty');
+    r('rp-sell-dirty-total').textContent = p('s2-dirty-total');
+    r('rp-sell-proceeds').textContent = p('s2-total');
+    r('rp-sell-proceeds-total').textContent = p('s2-total');
+    r('rp-profit').textContent = p('s3-profit');
+    r('rp-profit-total').textContent = p('s3-profit');
+    r('rp-tax').textContent = p('s3-tax');
+    r('rp-net-profit').textContent = p('s3-net-profit');
+    r('rp-net-profit-total').textContent = p('s3-net-profit');
+    r('rp-be-clean').textContent = p('be-main-value');
+    r('rp-be-change').textContent = p('be-needed-rise') + ' (' + (p('be-direction') || 'вырасти') + ')';
+    r('rp-bb-clean').textContent = p('s4-buyback-clean');
+    r('rp-bb-clean-total').textContent = p('s4-buyback-clean-total');
+    r('rp-bb-cost').textContent = p('s4-total');
+    r('rp-bb-cost-total').textContent = p('s4-total');
+    r('rp-bb-free').textContent = p('s4-free');
+  }
+  document.getElementById('btn-pdf').addEventListener('click', () => {
+    populateReport();
+    setTimeout(() => window.print(), 50);
+  });
   calc();
 });
 </script>
