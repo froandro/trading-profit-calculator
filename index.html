@@ -164,18 +164,11 @@ h1 {
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
-.field input:user-invalid {
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
-}
 .dark-mode .field input { background: #1e1e22; }
 .dark-mode .field input:focus { box-shadow: 0 0 0 3px rgba(96,165,250,0.2); }
-.dark-mode .field input:user-invalid { box-shadow: 0 0 0 3px rgba(248,113,113,0.2); }
-/* fallback: os-level dark mode, no class set */
 @media (prefers-color-scheme: dark) {
   :root:not(.light-mode) .field input { background: #1e1e22; }
   :root:not(.light-mode) .field input:focus { box-shadow: 0 0 0 3px rgba(96,165,250,0.2); }
-  :root:not(.light-mode) .field input:user-invalid { box-shadow: 0 0 0 3px rgba(248,113,113,0.2); }
 }
 .field .unit {
   position: absolute;
