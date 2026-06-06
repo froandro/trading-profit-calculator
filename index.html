@@ -74,12 +74,14 @@ body {
   width: 100%;
   max-width: 780px;
   accent-color: var(--blue);
+  position: relative;
 }
 h1 {
   font-size: clamp(1.125rem, 1rem + 1vw, 1.5rem);
   font-weight: 600;
   margin-block-end: 0.25rem;
   text-wrap: balance;
+  font-family: var(--mono);
 }
 .theme-toggle {
   all: unset;
@@ -330,25 +332,27 @@ h1 {
   line-height: 1.6;
 }
 .notice strong { color: var(--text); }
-.btn-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-block-end: 0.75rem; }
 .btn-pdf {
   all: unset;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text2);
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 2.75rem;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 50%;
   background: var(--surface);
-  display: inline-flex;
+  border: 1px solid var(--border);
+  display: flex;
   align-items: center;
-  gap: 0.375rem;
-  transition: border-color 0.15s, color 0.15s;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.15s, border-color 0.15s;
+  color: var(--text2);
 }
 .btn-pdf:hover { border-color: var(--blue); color: var(--text); }
 .btn-pdf:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-.btn-pdf svg { fill: currentColor; inline-size: 1rem; block-size: 1rem; }
+.btn-pdf svg { fill: currentColor; inline-size: 1.25rem; block-size: 1.25rem; }
 #report { display: none; }
 @media print {
   .step, .be-hero, .row, .theme-toggle, .btn-row, .notice { display: none !important; }
@@ -383,6 +387,9 @@ h1 {
 <button class="theme-toggle" id="theme-toggle" aria-label="Переключить тему">
   <svg viewBox="0 0 24 24" id="theme-icon-moon"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-5.4-5.4c0-1.73.82-3.26 2.07-4.28A9 9 0 0 0 12 3z"/></svg>
   <svg viewBox="0 0 24 24" id="theme-icon-sun" style="display:none"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+</button>
+<button class="btn-pdf" id="btn-pdf" aria-label="Экспорт PDF">
+  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
 </button>
 <h1>Калькулятор сделки</h1>
 <p class="subtitle">Купил → цена выросла → продал. Сколько заработал с учётом НКД и комиссии? И почём откупать?</p>
@@ -669,15 +676,6 @@ h1 {
   </div>
 </div>
 
-<div class="btn-row">
-  <button class="btn-pdf" id="btn-pdf" aria-label="Экспорт PDF">
-    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
-    PDF
-  </button>
-</div>
-<div class="notice">
-  <strong>Как это работает.</strong> Вы платите <strong>чистую цену + НКД на дату покупки + комиссию</strong>. При продаже получаете <strong>новую чистую цену + НКД на дату продажи − комиссию</strong>. Разница — ваша прибыль или убыток. При откупе — свой НКД на дату откупа.
-</div>
 
 <!-- REPORT (visible only in print) -->
 <div id="report">
@@ -979,6 +977,6 @@ document.addEventListener('DOMContentLoaded', () => {
   calc();
 });
 </script>
-<script>if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') { var s = document.createElement('script'); s.src = 'agentation.bundle.js'; document.body.appendChild(s); }</script>
+<script>if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:') { var s = document.createElement('script'); s.src = 'agentation.bundle.js'; document.body.appendChild(s); }</script>
 </body>
 </html>
