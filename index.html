@@ -587,7 +587,7 @@ h1 {
       </span>
     </div>
     <div class="line">
-      <span class="lbl">− Комиссия при покупке</span>
+          <span class="lbl">+ Комиссия при покупке</span>
       <span class="vals">
         <span class="val" id="s1-comm">—</span>
         <span class="val-total" id="s1-comm-total">—</span>
@@ -851,8 +851,8 @@ function calc() {
   els['s1-nkd-total'].textContent = '+' + fmt(nkdBuy * qty);
   els['s1-dirty'].textContent = fmt(dirtyPrice);
   els['s1-dirty-total'].textContent = fmt(dirtyPrice * qty);
-  els['s1-comm'].textContent = '−' + fmt(commBuy);
-  els['s1-comm-total'].textContent = '−' + fmt(commBuy * qty);
+  els['s1-comm'].textContent = '+' + fmt(commBuy);
+  els['s1-comm-total'].textContent = '+' + fmt(commBuy * qty);
   els['s1-total'].textContent = fmt(totalSpent);
 
   // STEP 2: Sale
@@ -936,8 +936,8 @@ function calc() {
   els['s4-buyback-clean-total'].textContent = fmt(bbClean * qty);
   els['s4-nkd'].textContent = '+' + fmt(nkdBuyback);
   els['s4-nkd-total'].textContent = '+' + fmt(nkdBuyback * qty);
-  els['s4-comm'].textContent = '−' + fmt(commBb);
-  els['s4-comm-total'].textContent = '−' + fmt(commBb * qty);
+  els['s4-comm'].textContent = '+' + fmt(commBb);
+  els['s4-comm-total'].textContent = '+' + fmt(commBb * qty);
   els['s4-total'].textContent = fmt(bbTotal);
   els['s4-sell-proceeds'].textContent = fmt(profitTotal);
 
@@ -1095,18 +1095,21 @@ function initApiSearch() {
       // NKD for buyback: same as sell (user can adjust)
       const buybackNkd = sellNkd;
 
+      // Bond prices from MOEX API are in points (% of face value), convert to rubles
+      const faceValue = n(secVal('FACEVALUE')) || 1000;
+      const buyPriceRub = buyPrice * faceValue / 100;
+      const sellPriceRub = sellPrice > 0 ? sellPrice * faceValue / 100 : 0;
+
       if (buyPrice > 0) {
-        document.getElementById('buy-price').value = buyPrice.toFixed(4);
+        document.getElementById('buy-price').value = buyPriceRub.toFixed(4);
         document.getElementById('nkd').value = buyNkd.toFixed(2);
         document.getElementById('nkd-sell').value = sellNkd.toFixed(2);
         document.getElementById('nkd-buyback').value = buybackNkd.toFixed(2);
-        document.getElementById('rise').value = ((sellPrice / buyPrice - 1) * 100).toFixed(2);
-
         if (sellPrice > 0) {
-          // Keep investment, commission, tax as-is (user-set)
+          document.getElementById('rise').value = ((sellPrice / buyPrice - 1) * 100).toFixed(2);
         }
 
-        statusEl.textContent = 'Данные загружены: покупка ' + buyPrice.toFixed(2) + ' ₽, продажа ' + sellPrice.toFixed(4) + ' ₽';
+        statusEl.textContent = 'Данные загружены: покупка ' + buyPriceRub.toFixed(2) + ' ₽, продажа ' + (sellPriceRub > 0 ? sellPriceRub.toFixed(2) : '—') + ' ₽';
         statusEl.className = 'api-status ok';
         calc();
       } else {
